@@ -1,0 +1,11 @@
+[package]
+name = "sqrprob"
+version = "0.1.0"
+authors = ["Ezra Dudden <ezradudden@gmail.com>"]
+
+[dependencies]
+rand = "0.7.3"
+threadpool = "1.8.1"
+
+[profile.release]
+debug = true
