@@ -6,6 +6,7 @@ authors = ["Ezra Dudden <ezradudden@gmail.com>"]
 [dependencies]
 rand = "0.7.3"
 threadpool = "1.8.1"
+easy-http-request = "0.2.6"
 
 [profile.release]
 debug = true

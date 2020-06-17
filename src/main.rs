@@ -1,5 +1,7 @@
 extern crate rand;
 extern crate threadpool;
+extern crate easy_http_request;
+use std::env;
 use std::sync::mpsc::{channel, Sender};
 use threadpool::ThreadPool;
 use std::fs::File;
@@ -135,12 +137,27 @@ fn expand(potentials :&[i64]) -> Vec<i128> {
     return expanded;
 }
 
-#[cfg_attr(tarpaulin, skip)]
-fn main()-> std::io::Result<()> {
-    let start = 90_000;
-    let end = 300_000;
-    let pool_size=12;
-    let mut file = File::create("log.txt")?;
+fn fetch_seed()-> Result<i64, String> {
+    Ok(1)
+}
+
+fn get_pool_size( args: Vec<String>)-> usize {
+    if args.len() > 1 {
+        let pool_size_str = &args[1];
+        return match &args[1].parse::<usize>() {
+          Ok(n) => n,
+          Err(_) => 1,
+        }
+    }
+    return 1;
+}
+
+fn run_pool(seed :i64, pool_size: usize) -> Vec<String> {
+    let start = 100*seed;
+    let end = 100+start;
+    let mut results = Vec::new();
+    results.push(format!("seed:{}",seed));
+    results.push( format!("pool:{}",pool_size));
     let pool = ThreadPool::new(pool_size);
     let (tx, rx) = channel::<String>();
     for i in 0..pool_size {
@@ -150,16 +167,38 @@ fn main()-> std::io::Result<()> {
         });
     }
     drop(tx);
-
-
     for received in rx {
-        let s = received;
-        print!("{}\n", s);
+        let pr = format!("result: {}", received);
+        print!("{}\n", pr);
+        if ! results.contains(&pr){
+            results.push(pr);
+        }
+    }
+    return results;
+}
+
+#[cfg_attr(tarpaulin, skip)]
+fn main()-> std::io::Result<()> {
+    let pool_size = get_pool_size( env::args().collect() );
+    let mut file = File::create("log.txt")?;
+
+    let result = match fetch_seed(){
+        Ok(n) => run_pool(n, pool_size),
+        Err(e) => vec![e],
+    };
+
+    for s in result {
         file.write_all(s.as_bytes())?;
         file.write_all(b"\n")?;
+        println!("{}", s);
     }
+
     Ok(())
 }
+
+
+// Tests
+// =======================================================
 
 #[test]
 fn test_is_valid_true() {
